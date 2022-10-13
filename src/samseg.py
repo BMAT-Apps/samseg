@@ -358,7 +358,6 @@ class SamSegWorker(QObject):
         self.flair = flair              
         self.preprocessing = preprocessing           
         self.pipeline = "SAMSEG"
-        self.freesurfer_license = '/home/stluc/Programmes/BMAT/BMAT/license.txt'
         
         
     def run(self):
