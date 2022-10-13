@@ -1,0 +1,4 @@
+{
+	"python_requirements":"requirements.txt",
+	"docker":{"docker":null,"tag":null}
+}
