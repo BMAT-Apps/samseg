@@ -301,6 +301,7 @@ class SamsegTab(QWidget):
         self.action.moveToThread(self.thread)
         self.thread.started.connect(self.action.run)
         self.action.in_progress.connect(self.is_in_progress)
+        self.action.save_nifti.connect(self.save_nifti)
         self.action.finished.connect(self.thread.quit)
         self.action.finished.connect(self.action.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
@@ -312,6 +313,9 @@ class SamsegTab(QWidget):
     def is_in_progress(self, in_progress):
         self.parent.parent.work_in_progress.update_work_in_progress(in_progress)
 
+    
+    def save_nifti(self, nifti_img):
+        nib.save(nifti_img[0], nifti_img[1])
 
 
 # =============================================================================
@@ -320,8 +324,9 @@ class SamsegTab(QWidget):
 class SamSegWorker(QObject):
     finished = pyqtSignal()
     in_progress = pyqtSignal(tuple)
+    save_nifti = pyqtSignal(tuple)
 
-    def __init__(self, bids, add_info, subjects_and_sessions, mprage=False, flair=False, normalization=False, preprocessing=False):
+    def __init__(self, bids, add_info, subjects_and_sessions, mprage=False, flair=False, normalization=False, preprocessing=True):
         """
         
         
@@ -683,9 +688,13 @@ class SamSegWorker(QObject):
                     lesions = image.get_fdata()
                     lesions[lesions >= threshold] = 1
                     lesions[lesions < threshold] = 0
-                
+
+                    
                     lesions_nifti = nib.Nifti1Image(lesions, affine=image.affine)
-                    nib.save(lesions_nifti, pjoin(sub_ses_derivative_path_segment, f'sub-{self.sub}_ses-{self.ses}_lesions_binary.nii.gz'))
+                    
+                    # nib.save(lesions_nifti, pjoin(sub_ses_derivative_path_segment, f'sub-{self.sub}_ses-{self.ses}_lesions_binary.nii.gz'))
+                    self.save_nifti.emit((lesions_nifti,pjoin(sub_ses_derivative_path_segment, f'sub-{self.sub}_ses-{self.ses}_lesions_binary.nii.gz')))
+
                     
                 except Exception as e:
                     print(f'[ERROR] - {self.pipeline} | {e} while binarizing lesion probability mask for sub-{self.sub}_ses{self.ses}!')
